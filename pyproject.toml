@@ -1,0 +1,36 @@
+[tool.poetry]
+name = "Cloned-It"
+version = "0.1.0"
+description = "Reddit clone."
+authors = ["Josh Bousfield <jbousfield92@outlook.com>"]
+readme = "README.md"
+packages = [{ include = "app" }]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+Flask = "^3.0.3"
+python-dotenv = "^1.0.1"
+gunicorn = "^22.0.0"
+google-cloud-secret-manager = "^2.25.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+black = "^24.0.0"
+isort = "^5.13.0"
+pre-commit = "^3.7.0"
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 79
+
+[tool.isort]
+profile = "black"
+line_length = 79

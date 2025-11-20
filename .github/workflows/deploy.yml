@@ -1,0 +1,99 @@
+name: Cloned-It Deploy
+
+on:
+    pull_request:
+        branches:
+            - develop
+            - main
+    push:
+        branches:
+            - develop
+            - main
+
+jobs:
+    code_checks:
+        if: github.event_name == 'pull_request'
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                fetch-depth: 0
+
+            - name: Set up Python 3.12
+              uses: actions/setup-python@v5
+              with:
+                python-version: 3.12
+
+            - name: Apt Update
+              run: sudo apt update
+
+            - name: Install pipx
+              run: sudo apt install pipx
+            
+            - name: Ensure pipx is on PATH
+              run: pipx ensurepath
+
+            - name: Install Poetry using pipx
+              run: pipx install poetry==1.8
+
+            - name: Install project dependencies
+              run: poetry install
+
+            - name: Run tests
+              run: poetry run pytest
+
+            - name: Check imports are sorted
+              run: poetry run isort --settings-path pyproject.toml -c app tests
+
+            - name: Check code formatting
+              run: poetry run black --check app tests
+
+    deploy_dev:
+        if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+        runs-on: ubuntu-latest
+        env:
+            GOOGLE_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID_DEV }}
+            GOOGLE_SA_KEY: ${{ secrets.GCP_SA_KEY_DEV }}
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Authenticate to Google Cloud (dev)
+              uses: google-github-actions/auth@v2
+              with:
+                credentials_json: ${{ env.GOOGLE_SA_KEY }}
+
+            - name: Set up gcloud SDK
+              uses: google-github-actions/setup-gcloud@v2
+
+            - name: Deploy to App Engine (dev)
+              run: |
+                gcloud app deploy app-dev.yaml \
+                  --project "$GOOGLE_PROJECT_ID" \
+                  --quiet
+
+
+    deploy_prod:
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        runs-on: ubuntu-latest
+        env:
+            GOOGLE_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID_PROD }}
+            GOOGLE_SA_KEY: ${{ secrets.GCP_SA_KEY_PROD }}
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Authenticate to Google Cloud (prod)
+              uses: google-github-actions/auth@v2
+              with:
+                credentials_json: ${{ env.GOOGLE_SA_KEY }}
+
+            - name: Set up gcloud SDK
+              uses: google-github-actions/setup-gcloud@v2
+
+            - name: Deploy to App Engine (prod)
+              run: |
+                gcloud app deploy app-prod.yaml \
+                  --project "$GOOGLE_PROJECT_ID" \
+                  --quiet
