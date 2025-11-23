@@ -1,6 +1,7 @@
 def test_index(client):
+    """Test the home page returns HTML."""
     response = client.get("/")
 
     assert response.status_code == 200
-    assert response.is_json
-    assert response.get_json() == {"message": "App!"}
+    assert b"Cloned-It" in response.data
+    assert b"Welcome" in response.data
