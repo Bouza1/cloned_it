@@ -6,6 +6,8 @@ from typing import Optional
 from app.constants import (
     DEVELOPMENT,
     FLASK_ENV,
+    GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET,
     LOCAL,
     PRODUCTION,
     SECRET_KEY,
@@ -26,6 +28,21 @@ class Config:
     # App settings
     ENVIRONMENT = os.environ.get(FLASK_ENV, LOCAL)
 
+    # Google OAuth settings
+    GOOGLE_CLIENT_ID: Optional[str] = os.environ.get(GOOGLE_CLIENT_ID)
+    GOOGLE_CLIENT_SECRET: Optional[str] = os.environ.get(GOOGLE_CLIENT_SECRET)
+    GOOGLE_DISCOVERY_URL = (
+        "https://accounts.google.com/.well-known/openid-configuration"
+    )
+
+    # Session settings
+    SESSION_COOKIE_SECURE = True  # Only send cookies over HTTPS
+    SESSION_COOKIE_HTTPONLY = (
+        True  # Prevent JavaScript access to session cookie
+    )
+    SESSION_COOKIE_SAMESITE = "Lax"  # CSRF protection
+    PERMANENT_SESSION_LIFETIME = 3600  # 1 hour session timeout
+
 
 class LocalConfig(Config):
     """Local development configuration."""
@@ -33,7 +50,9 @@ class LocalConfig(Config):
     DEBUG = True
     TESTING = False
     ENVIRONMENT = LOCAL
-    # Uses .env file for local development
+
+    # Allow insecure cookies for local development (HTTP)
+    SESSION_COOKIE_SECURE = False
 
 
 class DevelopmentConfig(Config):

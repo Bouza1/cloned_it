@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - Cloned-It{% endblock %}
+
+{% block content %}
+<h1>Your Profile</h1>
+
+{% if session.user %}
+    {% if session.user.picture %}
+        <img src="{{ session.user.picture }}" alt="{{ session.user.name }}" width="120" height="120">
+    {% endif %}
+    
+    <h2>{{ session.user.name }}</h2>
+    <p>{{ session.user.email }}</p>
+    
+    <h3>Account Information</h3>
+    <table border="1">
+        <tr>
+            <td>User ID:</td>
+            <td>{{ session.user.id }}</td>
+        </tr>
+        <tr>
+            <td>Email:</td>
+            <td>{{ session.user.email }}</td>
+        </tr>
+        <tr>
+            <td>Display Name:</td>
+            <td>{{ session.user.name }}</td>
+        </tr>
+    </table>
+    
+    <p>
+        <a href="/">Back to Home</a>
+        <a href="/auth/logout">Logout</a>
+    </p>
+{% else %}
+    <p><strong>No user information available.</strong></p>
+    <p>Please <a href="/auth/login">log in</a> to view your profile.</p>
+{% endif %}
+
+{% endblock %}

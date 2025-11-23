@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Cloned-It{% endblock %}
+
+{% block content %}
+{% if current_user.is_authenticated %}
+    <h1>Welcome back, {{ session.user.name }}!</h1>
+{% else %}
+    <h1>Welcome to Cloned-It</h1>
+    <p><a href="/auth/login">Login With Google</a></p>
+{% endif %}
+
+{% if current_user.is_authenticated %}
+<h2>Quick Links</h2>
+<ul>
+    <li>
+        <h3>Profile</h3>
+        <a href="/profile">View Profile</a>
+    </li>
+</ul>
+{% endif %}
+<h3>System Information</h3>
+<p><strong>Environment:</strong> {{ environment }}</p>
+<p><strong>Authentication Status:</strong> 
+    {% if current_user.is_authenticated %}
+        Authenticated
+    {% else %}
+        Not Authenticated
+    {% endif %}
+</p>
+{% endblock %}
