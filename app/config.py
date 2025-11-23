@@ -78,6 +78,8 @@ class TestingConfig(Config):
     TESTING = True
     ENVIRONMENT = TESTING
     SECRET_KEY = "test-secret-key"
+    GOOGLE_CLIENT_ID = "test-google-client-id"
+    GOOGLE_CLIENT_SECRET = "test-google-client-secret"
 
 
 # Configuration mapping
