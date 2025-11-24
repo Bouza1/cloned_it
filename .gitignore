@@ -16,6 +16,8 @@ venv/
 .env
 .env.*
 
+# Auto-generated files
+requirements.txt
 
 # OS files
 .DS_Store

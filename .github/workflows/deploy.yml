@@ -59,6 +59,23 @@ jobs:
             - name: Checkout repository
               uses: actions/checkout@v4
 
+            - name: Set up Python 3.12
+              uses: actions/setup-python@v5
+              with:
+                python-version: 3.12
+
+            - name: Install pipx
+              run: sudo apt install pipx
+            
+            - name: Ensure pipx is on PATH
+              run: pipx ensurepath
+
+            - name: Install Poetry using pipx
+              run: pipx install poetry==1.8
+
+            - name: Generate requirements.txt from Poetry
+              run: poetry export -f requirements.txt --output requirements.txt --without-hashes
+
             - name: Authenticate to Google Cloud (dev)
               uses: google-github-actions/auth@v2
               with:
@@ -83,6 +100,23 @@ jobs:
         steps:
             - name: Checkout repository
               uses: actions/checkout@v4
+
+            - name: Set up Python 3.12
+              uses: actions/setup-python@v5
+              with:
+                python-version: 3.12
+
+            - name: Install pipx
+              run: sudo apt install pipx
+            
+            - name: Ensure pipx is on PATH
+              run: pipx ensurepath
+
+            - name: Install Poetry using pipx
+              run: pipx install poetry==1.8
+
+            - name: Generate requirements.txt from Poetry
+              run: poetry export -f requirements.txt --output requirements.txt --without-hashes
 
             - name: Authenticate to Google Cloud (prod)
               uses: google-github-actions/auth@v2
