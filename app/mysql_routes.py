@@ -5,9 +5,11 @@ This demonstrates the pattern for migrating from datastore_client to mysql_clien
 
 from datetime import datetime
 
+import requests
 from flask import Blueprint, jsonify, render_template, request
 from flask_login import login_required
 
+from app.utils.cloud_functions import get_function_url
 from app.utils.logging.logger import get_logger
 from app.utils.mysql_client import (
     create_post,
@@ -197,6 +199,70 @@ def submit_post_mysql():
         return render_template(
             "posts.html", posts=posts_data, error_message=f"Error: {str(e)}"
         )
+
+
+@mysql_bp.route("/mysql-stats-via-function")
+@login_required
+def mysql_stats_via_function():
+    """
+    Get MySQL statistics via Cloud Function.
+    This demonstrates how a Cloud Function can directly access Cloud SQL.
+    """
+    try:
+        # Get the Cloud Function URL
+        function_url = get_function_url("get_mysql_stats")
+        
+        logger.info(f"Calling Cloud Function: {function_url}")
+        
+        # Get authentication token for App Engine service account
+        import google.auth
+        import google.auth.transport.requests
+        from google.oauth2 import id_token
+        
+        # Get credentials and generate ID token
+        auth_req = google.auth.transport.requests.Request()
+        id_token_credential = id_token.fetch_id_token(auth_req, function_url)
+        
+        # Call the Cloud Function with authentication
+        headers = {"Authorization": f"Bearer {id_token_credential}"}
+        
+        # Add optional query parameters
+        params = {}
+        table = request.args.get("table")
+        limit = request.args.get("limit")
+        if table:
+            params["table"] = table
+        if limit:
+            params["limit"] = limit
+        
+        response = requests.get(function_url, headers=headers, params=params, timeout=30)
+        
+        if response.status_code == 200:
+            stats = response.json()
+            logger.info(f"Successfully retrieved MySQL stats via Cloud Function")
+            return jsonify(stats)
+        else:
+            logger.error(f"Cloud Function returned status {response.status_code}")
+            return jsonify({
+                "status": "error",
+                "message": f"Cloud Function returned error: {response.status_code}",
+                "response": response.text
+            }), response.status_code
+    
+    except requests.exceptions.Timeout:
+        logger.error("Cloud Function request timed out")
+        return jsonify({
+            "status": "error",
+            "message": "Cloud Function request timed out"
+        }), 504
+    
+    except Exception as e:
+        logger.error(f"Error calling Cloud Function: {e}", exc_info=True)
+        return jsonify({
+            "status": "error",
+            "message": str(e),
+            "error_type": type(e).__name__
+        }), 500
 
 
 @mysql_bp.route("/migrate-datastore-to-mysql")
