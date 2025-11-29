@@ -97,12 +97,25 @@ jobs:
         env:
           DB_PASSWORD: ${{ secrets.db_password }}
         run: |
+          echo "Creating socket directory..."
+          mkdir -p /tmp/cloudsql
+          
           echo "Starting Cloud SQL Proxy..."
           cloud-sql-proxy ${{ steps.get_connection.outputs.connection_name }} \
             --unix-socket=/tmp/cloudsql &
           
+          PROXY_PID=$!
+          echo "Cloud SQL Proxy started with PID: $PROXY_PID"
+          
           # Wait for proxy to be ready
-          sleep 5
+          echo "Waiting for proxy to be ready..."
+          sleep 10
+          
+          # Check if proxy is running
+          if ! ps -p $PROXY_PID > /dev/null; then
+            echo "Error: Cloud SQL Proxy failed to start"
+            exit 1
+          fi
           
           echo "Deploying schema to ${{ inputs.database_name }}..."
           
@@ -115,11 +128,22 @@ jobs:
             < database/schema.sql
           
           echo "Schema deployed successfully"
+          
+          # Stop the proxy
+          kill $PROXY_PID 2>/dev/null || true
 
       - name: Verify tables
         env:
           DB_PASSWORD: ${{ secrets.db_password }}
         run: |
+          echo "Starting proxy for verification..."
+          mkdir -p /tmp/cloudsql
+          cloud-sql-proxy ${{ steps.get_connection.outputs.connection_name }} \
+            --unix-socket=/tmp/cloudsql &
+          
+          PROXY_PID=$!
+          sleep 5
+          
           echo "Verifying tables..."
           TABLES=$(mysql \
             --socket=/tmp/cloudsql/${{ steps.get_connection.outputs.connection_name }} \
@@ -136,6 +160,9 @@ jobs:
           # Count tables
           TABLE_COUNT=$(echo "$TABLES" | wc -l)
           echo "Found $TABLE_COUNT tables"
+          
+          # Stop the proxy
+          kill $PROXY_PID 2>/dev/null || true
 
       - name: Deployment Summary
         run: |
