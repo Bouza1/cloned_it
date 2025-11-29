@@ -30,6 +30,17 @@ jobs:
       - name: Set up gcloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
+      - name: Enable required GCP APIs
+        run: |
+          gcloud services enable cloudfunctions.googleapis.com \
+            --project "${{ secrets.project_id }}"
+          gcloud services enable run.googleapis.com \
+            --project "${{ secrets.project_id }}"
+          gcloud services enable cloudbuild.googleapis.com \
+            --project "${{ secrets.project_id }}"
+          gcloud services enable artifactregistry.googleapis.com \
+            --project "${{ secrets.project_id }}"
+
       - name: Deploy get_datastore_stats
         run: |
           gcloud functions deploy get_datastore_stats \
