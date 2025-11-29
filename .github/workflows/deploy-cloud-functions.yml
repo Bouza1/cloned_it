@@ -40,6 +40,10 @@ jobs:
             --project "${{ secrets.project_id }}"
           gcloud services enable artifactregistry.googleapis.com \
             --project "${{ secrets.project_id }}"
+          gcloud services enable eventarc.googleapis.com \
+            --project "${{ secrets.project_id }}"
+          gcloud services enable pubsub.googleapis.com \
+            --project "${{ secrets.project_id }}"
 
       - name: Deploy get_datastore_stats
         run: |
