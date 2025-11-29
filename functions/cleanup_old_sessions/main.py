@@ -24,7 +24,6 @@ def cleanup_old_sessions(cloud_event):
         cutoff_date = datetime.now() - timedelta(days=7)
 
         # Query for old sessions
-        # Assuming sessions have a 'last_active' or 'created_at' timestamp field
         query = db.query(kind="Session")
         query.add_filter("last_active", "<", cutoff_date)
 

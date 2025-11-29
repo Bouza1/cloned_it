@@ -6,14 +6,7 @@ and sample data, demonstrating how Cloud Functions can access Cloud SQL.
 Uses the shared db_client module for database connectivity.
 """
 
-import os
-import sys
-
 import functions_framework
-
-# Add parent directory to path to import shared module
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
-
 from shared import db_client
 
 

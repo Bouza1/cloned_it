@@ -91,6 +91,7 @@ jobs:
 
       - name: Deploy get_mysql_stats
         run: |
+          cp -r functions/shared functions/get_mysql_stats/shared
           gcloud functions deploy get_mysql_stats \
             --gen2 \
             --runtime python311 \

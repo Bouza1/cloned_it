@@ -1,3 +1,6 @@
 functions-framework==3.*
--r ../shared/requirements.txt
+cloud-sql-python-connector[pymysql]==1.4.3
+SQLAlchemy==2.0.23
+PyMySQL==1.1.0
+google-cloud-secret-manager==2.16.4
 
