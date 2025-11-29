@@ -82,7 +82,7 @@ jobs:
 
       - name: Deployment Summary
         run: |
-          echo "✅ Successfully deployed Cloud Functions to ${{ inputs.environment }} environment"
+          echo "Successfully deployed Cloud Functions to ${{ inputs.environment }} environment"
           echo "Project: ${{ secrets.project_id }}"
           echo "Functions deployed:"
           echo "  - get_datastore_stats"

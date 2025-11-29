@@ -17,7 +17,20 @@ jobs:
         uses: ./.github/workflows/code-checks.yml
 
     # Deploy to DEV environment
+    deploy_dev_database:
+        if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+        uses: ./.github/workflows/deploy-database.yml
+        with:
+          environment: dev
+          sql_instance: cloned-it-dev
+          database_name: cloned_it
+        secrets:
+          project_id: ${{ secrets.GCP_PROJECT_ID_DEV }}
+          gcp_sa_key: ${{ secrets.GCP_SA_KEY_DEV }}
+          db_password: ${{ secrets.DB_PASSWORD_DEV }}
+
     deploy_dev_application:
+        needs: deploy_dev_database
         if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
         uses: ./.github/workflows/deploy-application.yml
         with:
@@ -38,7 +51,20 @@ jobs:
           gcp_sa_key: ${{ secrets.GCP_SA_KEY_DEV }}
 
     # Deploy to PROD environment
+    deploy_prod_database:
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: ./.github/workflows/deploy-database.yml
+        with:
+          environment: prod
+          sql_instance: cloned-it-prod
+          database_name: cloned_it
+        secrets:
+          project_id: ${{ secrets.GCP_PROJECT_ID_PROD }}
+          gcp_sa_key: ${{ secrets.GCP_SA_KEY_PROD }}
+          db_password: ${{ secrets.DB_PASSWORD_PROD }}
+
     deploy_prod_application:
+        needs: deploy_prod_database
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: ./.github/workflows/deploy-application.yml
         with:

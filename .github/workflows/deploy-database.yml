@@ -1,0 +1,140 @@
+name: Deploy Database Schema
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: 'Environment name (dev/prod)'
+        required: true
+        type: string
+      sql_instance:
+        description: 'Cloud SQL instance name'
+        required: true
+        type: string
+      database_name:
+        description: 'Database name'
+        required: true
+        type: string
+        default: 'cloned_it'
+    secrets:
+      project_id:
+        description: 'Google Cloud Project ID'
+        required: true
+      gcp_sa_key:
+        description: 'Google Cloud Service Account Key'
+        required: true
+      db_password:
+        description: 'Database root password'
+        required: true
+
+jobs:
+  deploy_schema:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.gcp_sa_key }}
+
+      - name: Set up gcloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          install_components: 'beta,sql-proxy'
+
+      - name: Install MySQL Client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mysql-client
+
+      - name: Check if database exists
+        id: check_db
+        run: |
+          # List databases and check if our database exists
+          DATABASES=$(gcloud sql databases list \
+            --instance=${{ inputs.sql_instance }} \
+            --project=${{ secrets.project_id }} \
+            --format="value(name)")
+          
+          if echo "$DATABASES" | grep -q "^${{ inputs.database_name }}$"; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Database '${{ inputs.database_name }}' exists"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Database '${{ inputs.database_name }}' does not exist"
+          fi
+
+      - name: Create database if not exists
+        if: steps.check_db.outputs.exists == 'false'
+        run: |
+          echo "Creating database '${{ inputs.database_name }}'..."
+          gcloud sql databases create ${{ inputs.database_name }} \
+            --instance=${{ inputs.sql_instance }} \
+            --project=${{ secrets.project_id }} \
+            --charset=utf8mb4 \
+            --collation=utf8mb4_unicode_ci
+          echo "Database created successfully"
+
+      - name: Get Cloud SQL connection name
+        id: get_connection
+        run: |
+          CONNECTION_NAME=$(gcloud sql instances describe ${{ inputs.sql_instance }} \
+            --project=${{ secrets.project_id }} \
+            --format="value(connectionName)")
+          echo "connection_name=$CONNECTION_NAME" >> $GITHUB_OUTPUT
+          echo "Connection name: $CONNECTION_NAME"
+
+      - name: Deploy database schema
+        env:
+          DB_PASSWORD: ${{ secrets.db_password }}
+        run: |
+          echo "Starting Cloud SQL Proxy..."
+          cloud-sql-proxy ${{ steps.get_connection.outputs.connection_name }} \
+            --unix-socket=/tmp/cloudsql &
+          
+          # Wait for proxy to be ready
+          sleep 5
+          
+          echo "Deploying schema to ${{ inputs.database_name }}..."
+          
+          # Execute the schema file
+          mysql \
+            --socket=/tmp/cloudsql/${{ steps.get_connection.outputs.connection_name }} \
+            --user=root \
+            --password="$DB_PASSWORD" \
+            ${{ inputs.database_name }} \
+            < database/schema.sql
+          
+          echo "Schema deployed successfully"
+
+      - name: Verify tables
+        env:
+          DB_PASSWORD: ${{ secrets.db_password }}
+        run: |
+          echo "Verifying tables..."
+          TABLES=$(mysql \
+            --socket=/tmp/cloudsql/${{ steps.get_connection.outputs.connection_name }} \
+            --user=root \
+            --password="$DB_PASSWORD" \
+            ${{ inputs.database_name }} \
+            -e "SHOW TABLES;" \
+            --batch \
+            --skip-column-names)
+          
+          echo "Tables in database:"
+          echo "$TABLES"
+          
+          # Count tables
+          TABLE_COUNT=$(echo "$TABLES" | wc -l)
+          echo "Found $TABLE_COUNT tables"
+
+      - name: Deployment Summary
+        run: |
+          echo "Database schema deployed successfully!"
+          echo "Environment: ${{ inputs.environment }}"
+          echo "Project: ${{ secrets.project_id }}"
+          echo "Instance: ${{ inputs.sql_instance }}"
+          echo "Database: ${{ inputs.database_name }}"
+

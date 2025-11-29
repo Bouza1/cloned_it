@@ -18,6 +18,10 @@ flask-login = "^0.6.3"
 google-cloud-logging = "^3.12.1"
 google-cloud-firestore = "2.20.0"
 google-cloud-datastore = "^2.20.0"
+pymysql = "^1.1.2"
+cloud-sql-python-connector = "^1.18.5"
+sqlalchemy = "^2.0.44"
+cryptography = "^46.0.3"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0.0"
