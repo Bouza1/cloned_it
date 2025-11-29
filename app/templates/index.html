@@ -3,29 +3,46 @@
 {% block title %}Home - Cloned-It{% endblock %}
 
 {% block content %}
-{% if current_user.is_authenticated %}
-    <h1>Welcome back, {{ session.user.name }}!</h1>
-{% else %}
-    <h1>Welcome to Cloned-It</h1>
-    <p><a href="/auth/login">Login With Google</a></p>
-{% endif %}
-
-{% if current_user.is_authenticated %}
-<h2>Quick Links</h2>
-<ul>
-    <li>
-        <h3>Profile</h3>
-        <a href="/profile">View Profile</a>
-    </li>
-</ul>
-{% endif %}
-<h3>System Information</h3>
-<p><strong>Environment:</strong> {{ environment }}</p>
-<p><strong>Authentication Status:</strong> 
+<div style="max-width: 800px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
     {% if current_user.is_authenticated %}
-        Authenticated
+        <h1>Welcome back, {{ session.user.name }}!</h1>
+        <p style="color: #666; margin-bottom: 30px;">Ready to share something interesting?</p>
     {% else %}
-        Not Authenticated
+        <h1>Welcome to Cloned-It</h1>
+        <p style="color: #666; margin-bottom: 20px;">A Reddit-style community for sharing and discussing content.</p>
+        <p><a href="/auth/login" style="background-color: #ff4500; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Sign in with Google</a></p>
     {% endif %}
-</p>
+
+    {% if current_user.is_authenticated %}
+    <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+        <h2 style="margin-top: 0;">Quick Links</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+            <a href="/posts" style="background-color: white; padding: 15px; border: 1px solid #dee2e6; border-radius: 8px; text-decoration: none; color: #333; transition: box-shadow 0.2s;">
+                <h3 style="margin: 0 0 5px 0; color: #ff4500;">📝 Posts</h3>
+                <p style="margin: 0; color: #666; font-size: 14px;">Browse and create posts</p>
+            </a>
+            <a href="/profile" style="background-color: white; padding: 15px; border: 1px solid #dee2e6; border-radius: 8px; text-decoration: none; color: #333; transition: box-shadow 0.2s;">
+                <h3 style="margin: 0 0 5px 0; color: #007bff;">👤 Profile</h3>
+                <p style="margin: 0; color: #666; font-size: 14px;">View your profile</p>
+            </a>
+            <a href="/admin/stats" style="background-color: white; padding: 15px; border: 1px solid #dee2e6; border-radius: 8px; text-decoration: none; color: #333; transition: box-shadow 0.2s;">
+                <h3 style="margin: 0 0 5px 0; color: #28a745;">📊 Stats</h3>
+                <p style="margin: 0; color: #666; font-size: 14px;">Admin dashboard</p>
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <div style="background-color: white; padding: 20px; border: 1px solid #dee2e6; border-radius: 8px; margin-top: 20px;">
+        <h3>System Information</h3>
+        <p><strong>Environment:</strong> <span style="background-color: #e7f3ff; padding: 3px 8px; border-radius: 4px; font-size: 12px;">{{ environment }}</span></p>
+        <p><strong>Authentication Status:</strong> 
+            {% if current_user.is_authenticated %}
+                <span style="color: #28a745; font-weight: bold;">✓ Authenticated</span>
+            {% else %}
+                <span style="color: #dc3545; font-weight: bold;">✗ Not Authenticated</span>
+            {% endif %}
+        </p>
+    </div>
+</div>
 {% endblock %}

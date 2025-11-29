@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Stats - Cloned-It{% endblock %}
+
+{% block content %}
+<h1>Database Statistics</h1>
+
+{% if error %}
+    <div style="background-color: #ffeeee; border: 1px solid #cc0000; padding: 15px; margin: 20px 0; border-radius: 5px;">
+        <h3>Error</h3>
+        <p>{{ error }}</p>
+    </div>
+{% endif %}
+
+{% if stats %}
+    <div style="background-color: #eeffee; border: 1px solid #00cc00; padding: 15px; margin: 20px 0; border-radius: 5px;">
+        <h3>Status: {{ stats.status }}</h3>
+        <p><strong>Project:</strong> {{ stats.project }}</p>
+        <p><strong>Database:</strong> {{ stats.database }}</p>
+    </div>
+
+    <h2>Overview</h2>
+    <table border="1" cellpadding="10" cellspacing="0" style="width: 100%; margin: 20px 0;">
+        <tr>
+            <td><strong>Total Entities:</strong></td>
+            <td>{{ stats.total_entities }}</td>
+        </tr>
+        <tr>
+            <td><strong>Total Kinds:</strong></td>
+            <td>{{ stats.kinds|length }}</td>
+        </tr>
+    </table>
+
+    <h2>Entities by Kind</h2>
+    {% if stats.kind_counts %}
+        <table border="1" cellpadding="10" cellspacing="0" style="width: 100%; margin: 20px 0;">
+            <thead>
+                <tr style="background-color: #f0f0f0;">
+                    <th>Kind Name</th>
+                    <th>Entity Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for kind, count in stats.kind_counts.items() %}
+                <tr>
+                    <td>{{ kind }}</td>
+                    <td>{{ count }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p><em>No entities found in Datastore.</em></p>
+    {% endif %}
+
+    <h2>Available Kinds</h2>
+    {% if stats.kinds %}
+        <ul>
+            {% for kind in stats.kinds %}
+            <li><code>{{ kind }}</code></li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p><em>No kinds found.</em></p>
+    {% endif %}
+{% endif %}
+
+<hr>
+<p>
+    <a href="/">← Back to Home</a>
+    {% if current_user.is_authenticated %}
+        | <a href="/profile">View Profile</a>
+    {% endif %}
+</p>
+
+<hr>
+
+{% endblock %}
+
