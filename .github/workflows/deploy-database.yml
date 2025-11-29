@@ -41,13 +41,20 @@ jobs:
 
       - name: Set up gcloud SDK
         uses: google-github-actions/setup-gcloud@v2
-        with:
-          install_components: 'beta,sql-proxy'
 
       - name: Install MySQL Client
         run: |
           sudo apt-get update
           sudo apt-get install -y mysql-client
+
+      - name: Install Cloud SQL Proxy
+        run: |
+          echo "Downloading Cloud SQL Proxy..."
+          curl -o cloud-sql-proxy https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.14.2/cloud-sql-proxy.linux.amd64
+          chmod +x cloud-sql-proxy
+          sudo mv cloud-sql-proxy /usr/local/bin/
+          echo "Cloud SQL Proxy installed successfully"
+          cloud-sql-proxy --version
 
       - name: Check if database exists
         id: check_db
