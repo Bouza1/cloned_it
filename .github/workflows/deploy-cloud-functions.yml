@@ -101,7 +101,7 @@ jobs:
             --entry-point get_mysql_stats \
             --source functions/get_mysql_stats \
             --no-allow-unauthenticated \
-            --set-env-vars CLOUD_SQL_CONNECTION_NAME="${{ secrets.project_id }}:europe-west1:cloned-it-db",DB_USER=root,DB_NAME=cloned_it,GCP_PROJECT="${{ secrets.project_id }}" \
+            --set-env-vars CLOUD_SQL_CONNECTION_NAME="${{ secrets.project_id }}:europe-west1:cloned-it-dev",DB_USER=root,DB_NAME=cloned_it,GCP_PROJECT="${{ secrets.project_id }}" \
             --quiet
       
       - name: Grant App Engine permission to invoke get_mysql_stats
