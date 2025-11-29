@@ -1,0 +1,8 @@
+indexes:
+  # Composite index for Session queries
+  # Used in User.get() to find active sessions by user_id
+  - kind: Session
+    properties:
+      - name: user_id
+      - name: expires_at
+

@@ -51,6 +51,17 @@ jobs:
       - name: Set up gcloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
+      - name: Deploy Datastore Indexes
+        run: |
+          if [ -f index.yaml ]; then
+            echo "Deploying Datastore indexes..."
+            gcloud datastore indexes create index.yaml \
+              --project "${{ secrets.project_id }}" \
+              --quiet
+          else
+            echo "No index.yaml found, skipping index deployment"
+          fi
+
       - name: Deploy to App Engine
         run: |
           gcloud app deploy ${{ inputs.app_yaml }} \
