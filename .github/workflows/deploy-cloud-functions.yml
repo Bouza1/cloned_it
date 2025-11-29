@@ -3,15 +3,14 @@ name: Deploy Cloud Functions
 on:
   workflow_call:
     inputs:
-      project_id:
-        description: 'Google Cloud Project ID'
-        required: true
-        type: string
       environment:
         description: 'Environment name (dev/prod)'
         required: true
         type: string
     secrets:
+      project_id:
+        description: 'Google Cloud Project ID'
+        required: true
       gcp_sa_key:
         description: 'Google Cloud Service Account Key'
         required: true
@@ -39,7 +38,7 @@ jobs:
             --trigger-http \
             --allow-unauthenticated \
             --region europe-west1 \
-            --project "${{ inputs.project_id }}" \
+            --project "${{ secrets.project_id }}" \
             --entry-point get_datastore_stats \
             --source functions/get_datastore_stats \
             --quiet
@@ -51,7 +50,7 @@ jobs:
             --runtime python311 \
             --trigger-topic cleanup-sessions-topic \
             --region europe-west1 \
-            --project "${{ inputs.project_id }}" \
+            --project "${{ secrets.project_id }}" \
             --entry-point cleanup_old_sessions \
             --source functions/cleanup_old_sessions \
             --quiet
@@ -59,7 +58,7 @@ jobs:
       - name: Deployment Summary
         run: |
           echo "✅ Successfully deployed Cloud Functions to ${{ inputs.environment }} environment"
-          echo "Project: ${{ inputs.project_id }}"
+          echo "Project: ${{ secrets.project_id }}"
           echo "Functions deployed:"
           echo "  - get_datastore_stats"
           echo "  - cleanup_old_sessions"

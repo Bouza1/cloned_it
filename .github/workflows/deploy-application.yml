@@ -3,10 +3,6 @@ name: Deploy Application
 on:
   workflow_call:
     inputs:
-      project_id:
-        description: 'Google Cloud Project ID'
-        required: true
-        type: string
       environment:
         description: 'Environment name (dev/prod)'
         required: true
@@ -16,6 +12,9 @@ on:
         required: true
         type: string
     secrets:
+      project_id:
+        description: 'Google Cloud Project ID'
+        required: true
       gcp_sa_key:
         description: 'Google Cloud Service Account Key'
         required: true
@@ -55,12 +54,12 @@ jobs:
       - name: Deploy to App Engine
         run: |
           gcloud app deploy ${{ inputs.app_yaml }} \
-            --project "${{ inputs.project_id }}" \
+            --project "${{ secrets.project_id }}" \
             --quiet
 
       - name: Deployment Summary
         run: |
           echo "✅ Successfully deployed application to ${{ inputs.environment }} environment"
-          echo "Project: ${{ inputs.project_id }}"
+          echo "Project: ${{ secrets.project_id }}"
           echo "App YAML: ${{ inputs.app_yaml }}"
 
