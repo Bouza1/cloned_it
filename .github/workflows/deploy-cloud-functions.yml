@@ -45,6 +45,17 @@ jobs:
           gcloud services enable pubsub.googleapis.com \
             --project "${{ secrets.project_id }}"
 
+      - name: Create Pub/Sub topics
+        run: |
+          # Create cleanup-sessions-topic if it doesn't exist
+          if ! gcloud pubsub topics describe cleanup-sessions-topic --project "${{ secrets.project_id }}" &>/dev/null; then
+            gcloud pubsub topics create cleanup-sessions-topic \
+              --project "${{ secrets.project_id }}"
+            echo "Created topic: cleanup-sessions-topic"
+          else
+            echo "Topic cleanup-sessions-topic already exists"
+          fi
+
       - name: Deploy get_datastore_stats
         run: |
           gcloud functions deploy get_datastore_stats \
