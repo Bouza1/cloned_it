@@ -15,3 +15,10 @@ env_variables:
   FLASK_ENV: development
   PYTHONUNBUFFERED: "1"
   PROJECT_ID: 'cloned-it-dev'
+  DB_USER: 'root'
+  DB_NAME: 'cloned_it'
+  CLOUD_SQL_CONNECTION_NAME: 'cloned-it-dev:europe-west1:cloned-it-dev'
+
+# Configure Cloud SQL connection
+beta_settings:
+  cloud_sql_instances: cloned-it-dev:europe-west1:cloned-it-dev
