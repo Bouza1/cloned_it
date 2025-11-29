@@ -66,7 +66,15 @@ jobs:
             --project "${{ secrets.project_id }}" \
             --entry-point get_datastore_stats \
             --source functions/get_datastore_stats \
+            --no-allow-unauthenticated \
             --quiet
+          
+          # Grant App Engine default service account permission to invoke the function
+          gcloud functions add-invoker-policy-binding get_datastore_stats \
+            --gen2 \
+            --region europe-west1 \
+            --project "${{ secrets.project_id }}" \
+            --member="serviceAccount:${{ secrets.project_id }}@appspot.gserviceaccount.com"
 
       - name: Deploy cleanup_old_sessions
         run: |

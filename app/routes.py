@@ -117,8 +117,18 @@ def admin_stats():
 
         logger.info(f"Calling Cloud Function: {function_url}")
 
-        # Call the Cloud Function
-        response = requests.get(function_url, timeout=10)
+        # Get authentication token for App Engine service account
+        import google.auth
+        import google.auth.transport.requests
+        from google.oauth2 import id_token
+
+        # Get credentials and generate ID token
+        auth_req = google.auth.transport.requests.Request()
+        id_token_credential = id_token.fetch_id_token(auth_req, function_url)
+
+        # Call the Cloud Function with authentication
+        headers = {"Authorization": f"Bearer {id_token_credential}"}
+        response = requests.get(function_url, headers=headers, timeout=10)
 
         if response.status_code == 200:
             stats = response.json()
