@@ -136,8 +136,7 @@ def require_permission(permission: str) -> Callable:
                 )
                 return jsonify({"error": "Authentication required"}), 401
 
-            # Check if user has required permission
-            # Note: Implement user.has_permission() method in your User model
+            # TODO: Implement user.has_permission() method in User model
             has_permission = getattr(
                 current_user, "has_permission", lambda p: False
             )(permission)
@@ -197,7 +196,7 @@ def rate_limit_with_logging(
                 log_security_violation,
             )
 
-            # Simple in-memory rate limiting (use Redis in production!)
+            # Simple in-memory rate limiting
             if not hasattr(g, "rate_limit_store"):
                 g.rate_limit_store = {}
 

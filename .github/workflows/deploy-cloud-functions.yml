@@ -1,0 +1,65 @@
+name: Deploy Cloud Functions
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: 'Environment name (dev/prod)'
+        required: true
+        type: string
+    secrets:
+      project_id:
+        description: 'Google Cloud Project ID'
+        required: true
+      gcp_sa_key:
+        description: 'Google Cloud Service Account Key'
+        required: true
+
+jobs:
+  deploy_functions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.gcp_sa_key }}
+
+      - name: Set up gcloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Deploy get_datastore_stats
+        run: |
+          gcloud functions deploy get_datastore_stats \
+            --gen2 \
+            --runtime python311 \
+            --trigger-http \
+            --allow-unauthenticated \
+            --region europe-west1 \
+            --project "${{ secrets.project_id }}" \
+            --entry-point get_datastore_stats \
+            --source functions/get_datastore_stats \
+            --quiet
+
+      - name: Deploy cleanup_old_sessions
+        run: |
+          gcloud functions deploy cleanup_old_sessions \
+            --gen2 \
+            --runtime python311 \
+            --trigger-topic cleanup-sessions-topic \
+            --region europe-west1 \
+            --project "${{ secrets.project_id }}" \
+            --entry-point cleanup_old_sessions \
+            --source functions/cleanup_old_sessions \
+            --quiet
+
+      - name: Deployment Summary
+        run: |
+          echo "✅ Successfully deployed Cloud Functions to ${{ inputs.environment }} environment"
+          echo "Project: ${{ secrets.project_id }}"
+          echo "Functions deployed:"
+          echo "  - get_datastore_stats"
+          echo "  - cleanup_old_sessions"
+

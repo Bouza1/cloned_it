@@ -64,13 +64,17 @@ class SecurityEventType:
     LOGIN_SUCCESS = "login_success"
     LOGIN_FAILURE = "login_failure"
     LOGOUT = "logout"
-    SESSION_CREATED = "session_created"
-    SESSION_EXPIRED = "session_expired"
 
     # Account management events
     ACCOUNT_CREATED = "account_created"
     ACCOUNT_DELETED = "account_deleted"
     ACCOUNT_LOCKED = "account_locked"
+
+    # Session management events
+    SESSION_CREATED = "session_created"
+    SESSION_EXPIRED = "session_expired"
+    SESSION_DELETED = "session_deleted"
+    SESSION_HIJACK_ATTEMPT = "session_hijack_attempt"
 
     # Authorization events
     ACCESS_GRANTED = "access_granted"
@@ -103,12 +107,11 @@ def _get_request_context() -> dict[str, Any]:
             }
         )
 
-        # Add X-Forwarded-For if behind proxy (App Engine)
+        # Add X-Forwarded-For if behind proxy
         forwarded_for = request.headers.get(X_FORWARDED_FOR)
         if forwarded_for:
             context[IP_FORWARDED_FOR] = forwarded_for
 
-        # Add correlation ID if available
         correlation_id = request.headers.get(X_CORRELATION_ID)
         if correlation_id:
             context[CORRELATION_ID] = correlation_id
@@ -128,11 +131,11 @@ def log_auth_event(
     Log an authentication or authorization event.
 
     Args:
-        event_type: Type of event (use SecurityEventType constants)
+        event_type: Type of event (SecurityEventType)
         success: Whether the event was successful
         user_id: User ID if applicable
-        user_email: User email if applicable (be cautious with PII)
-        reason: Reason for failure (if applicable)
+        user_email: User email if applicable
+        reason: Reason for failure
         **extra_context: Additional context to include
     """
     log_data = {
@@ -180,10 +183,10 @@ def log_account_change(
     Log account modification events.
 
     Args:
-        event_type: Type of change (use SecurityEventType constants)
+        event_type: Type of change (SecurityEventType)
         user_id: ID of user being modified
         user_email: Email of user being modified
-        changed_by: ID of user making the change (if different)
+        changed_by: ID of user making the change
         changes: Dictionary of changes made
         **extra_context: Additional context
     """
@@ -278,7 +281,7 @@ def log_security_violation(
     Log security violations and suspicious activities.
 
     Args:
-        violation_type: Type of violation (use SecurityEventType constants)
+        violation_type: Type of violation (SecurityEventType)
         severity: Severity level ("low", "medium", "high", "critical")
         description: Description of the violation
         user_id: User ID if known
@@ -345,9 +348,6 @@ def log_session_event(
 
     message = f"Session event: {event_type} for user {user_id}"
     auth_logger.info(message, extra=log_data)
-
-
-# Convenience functions for common operations
 
 
 def log_login_success(

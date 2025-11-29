@@ -9,7 +9,9 @@
 <body>
     <nav>
         <a href="/">Cloned-It</a>
+        <a href="/posts">Posts</a>
         {% if current_user.is_authenticated %}
+            <a href="/admin/stats">Admin Stats</a>
             {% if session.user and session.user.picture %}
                 <img src="{{ session.user.picture }}" alt="{{ session.user.name }}" width="40" height="40">
             {% endif %}

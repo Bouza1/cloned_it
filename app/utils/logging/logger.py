@@ -2,8 +2,6 @@
 This module provides structured logging with:
 - Google Cloud Logging integration
 - Request correlation IDs
-- Environment-specific log levels
-- Structured JSON output
 - Error tracking
 """
 
@@ -11,7 +9,7 @@ import contextvars
 import logging
 import os
 import sys
-from typing import Any, Optional
+from typing import Any
 
 import google.cloud.logging
 from flask import Flask, g, has_request_context, request
@@ -75,7 +73,7 @@ class RequestContextFilter(logging.Filter):
         else:
             record.correlation_id = NO_REQUEST
 
-        # Add request information if within request context
+        # Add request information
         if has_request_context():
             record.request_path = request.path
             record.request_method = request.method
@@ -110,7 +108,7 @@ class StructuredFormatter(logging.Formatter):
 
     def format(self, record: logging.LogRecord) -> str:
         """Format the log record with structured fields."""
-        # Base log message with structured fields
+
         log_data = {
             SEVERITY: record.levelname,
             MESSAGE: record.getMessage(),
@@ -158,7 +156,7 @@ def get_log_level(environment: str) -> int:
     if env_log_level in LOG_LEVELS:
         return getattr(logging, env_log_level)
 
-    # Default levels per environment
+    # Default levels
     levels = {
         LOCAL: logging.DEBUG,
         DEVELOPMENT: logging.INFO,
@@ -177,13 +175,11 @@ def setup_cloud_logging(environment: str) -> None:
     # Only enable Cloud Logging for deployed environments
     if environment in (DEVELOPMENT, PRODUCTION):
         try:
-            # Initialize Google Cloud Logging client
+
             client = google.cloud.logging.Client()
 
-            # Set up Cloud Logging handler with automatic resource detection
             handler = CloudLoggingHandler(client)
 
-            # Integrate with Python's logging
             setup_logging(handler)
 
             logging.info(
@@ -209,19 +205,15 @@ def setup_local_logging(environment: str) -> None:
     """
     log_level = get_log_level(environment)
 
-    # Configure root logger
     root_logger = logging.getLogger()
     root_logger.setLevel(log_level)
 
-    # Remove existing handlers to avoid duplicates
     for handler in root_logger.handlers[:]:
         root_logger.removeHandler(handler)
 
-    # Create console handler with structured formatter
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(log_level)
 
-    # Use structured formatter for consistency
     formatter = logging.Formatter(
         "%(asctime)s | %(levelname)-8s | %(name)s | "
         "[%(correlation_id)s] | %(message)s",
@@ -232,7 +224,7 @@ def setup_local_logging(environment: str) -> None:
 
     root_logger.addHandler(console_handler)
 
-    # Reduce noise from third-party libraries
+    # Reduce third-party libraries logging
     logging.getLogger("werkzeug").setLevel(logging.WARNING)
     logging.getLogger("urllib3").setLevel(logging.WARNING)
     logging.getLogger("google").setLevel(logging.WARNING)
@@ -249,13 +241,11 @@ def configure_logging(app: Flask) -> None:
     """
     environment = app.config.get(ENVIRONMENT, LOCAL)
 
-    # Set up appropriate logging backend
     if environment in (DEVELOPMENT, PRODUCTION):
         setup_cloud_logging(environment)
     else:
         setup_local_logging(environment)
 
-    # Register request context hooks
     setup_request_logging(app)
 
 
@@ -272,14 +262,12 @@ def setup_request_logging(app: Flask) -> None:
         """Log request start and set correlation ID."""
         import uuid
 
-        # Generate or extract correlation ID
         correlation_id = request.headers.get(
             X_CORRELATION_ID, str(uuid.uuid4())
         )
         _correlation_id.set(correlation_id)
         g.correlation_id = correlation_id
 
-        # Log request start
         logger = logging.getLogger("app.request")
         logger.info(
             f"Request started: {request.method} {request.path}",
@@ -295,7 +283,6 @@ def setup_request_logging(app: Flask) -> None:
         """Log request completion."""
         logger = logging.getLogger("app.request")
 
-        # Log response
         logger.info(
             f"Request completed: {request.method} {request.path} - "
             f"Status: {response.status_code}",
@@ -306,7 +293,6 @@ def setup_request_logging(app: Flask) -> None:
             },
         )
 
-        # Add correlation ID to response headers for client tracking
         response.headers[X_CORRELATION_ID] = g.get(CORRELATION_ID, UNKNOWN)
 
         return response
@@ -319,7 +305,6 @@ def setup_request_logging(app: Flask) -> None:
         logger = logging.getLogger("app.error")
 
         # Don't log HTTP exceptions (404, 403, etc.) as errors
-        # These are normal HTTP responses, not application errors
         if isinstance(e, HTTPException):
             # Only log at INFO level for client errors (4xx) without stack trace
             if 400 <= e.code < 500:
@@ -355,7 +340,7 @@ def setup_request_logging(app: Flask) -> None:
                 },
             )
 
-        # Re-raise to allow Flask's default error handling
+        # Re-raise
         raise
 
 
@@ -367,7 +352,7 @@ def get_logger(name: str) -> logging.Logger:
     consistent logger configuration.
 
     Args:
-        name: Logger name (typically __name__ of the module)
+        name: Logger name
 
     Returns:
         Configured logger instance

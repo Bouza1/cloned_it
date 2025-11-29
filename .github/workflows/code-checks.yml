@@ -1,0 +1,43 @@
+name: Code Checks
+
+on:
+  workflow_call:
+
+jobs:
+  run_checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
+
+      - name: Apt Update
+        run: sudo apt update
+
+      - name: Install pipx
+        run: sudo apt install pipx
+      
+      - name: Ensure pipx is on PATH
+        run: pipx ensurepath
+
+      - name: Install Poetry using pipx
+        run: pipx install poetry==1.8
+
+      - name: Install project dependencies
+        run: poetry install
+
+      - name: Run tests
+        run: poetry run pytest
+
+      - name: Check imports are sorted
+        run: poetry run isort --settings-path pyproject.toml -c app tests
+
+      - name: Check code formatting
+        run: poetry run black --check app tests
+

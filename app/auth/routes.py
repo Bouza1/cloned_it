@@ -1,7 +1,7 @@
-"""Authentication routes for Google OAuth."""
+"""Authentication routes for Google OAuth with secure session management."""
 
 from authlib.integrations.flask_client import OAuth
-from flask import Blueprint, redirect, session, url_for
+from flask import Blueprint, redirect, request, session, url_for
 from flask_login import login_required, login_user, logout_user
 
 from app.constants import (
@@ -115,7 +115,7 @@ def callback():
             oauth_provider="google",
         )
 
-        # Check if user already exists
+        # Check if user already exists (check for existing session)
         user = User.get(user_id)
 
         if not user:
@@ -123,9 +123,6 @@ def callback():
             logger.info(
                 f"Creating new user account",
                 extra={"user_email": email, "user_id": user_id},
-            )
-            user = User.create(
-                id_=user_id, email=email, name=name, picture=picture
             )
 
             # Log security event: New account created
@@ -140,10 +137,24 @@ def callback():
                 extra={"user_email": email, "user_id": user_id},
             )
 
+        # Create secure session in Datastore
+        session_id = User.create_session(
+            user_id=user_id,
+            email=email,
+            name=name,
+            picture=picture,
+            request=request,  # For IP/UA binding
+        )
+
+        # Create User instance for Flask-Login
+        user = User.create(
+            id_=user_id, email=email, name=name, picture=picture
+        )
+
         # Log the user in (creates Flask-Login session)
         login_user(user)
 
-        # Store user info in session for easy access
+        # Store minimal user info in Flask session for easy access
         session[USER] = {
             ID: user_id,
             EMAIL: email,
@@ -161,8 +172,20 @@ def callback():
             user_id=user_id, user_email=email, oauth_provider="google"
         )
 
-        # Redirect to home page
-        return redirect(url_for("main.index"))
+        # Redirect to home page with secure session cookie
+        response = redirect(url_for("main.index"))
+
+        # Set secure session cookie
+        response.set_cookie(
+            "session_id",
+            session_id,
+            max_age=30 * 24 * 60 * 60,  # 30 days
+            secure=True,  # HTTPS only
+            httponly=True,  # Prevent XSS
+            samesite="Lax",  # Prevent CSRF
+        )
+
+        return response
 
     except Exception as e:
         logger.error(
@@ -195,13 +218,20 @@ def logout():
     user_id = user_data.get(ID, UNKNOWN)
     user_email = user_data.get(EMAIL, UNKNOWN)
 
+    # Get session ID from cookie
+    session_id = request.cookies.get("session_id")
+
     logger.info(
         f"User logging out", extra={USER_EMAIL: user_email, USER_ID: user_id}
     )
 
-    # Log security event: User logout
+    # Delete session from Datastore
+    if session_id:
+        User.delete_session(session_id, reason=SecurityEventType.LOGOUT)
+
     log_logout(user_id=user_id)
 
+    # Clear Flask-Login session
     logout_user()
     session.clear()
 
@@ -209,7 +239,12 @@ def logout():
         f"User successfully logged out",
         extra={USER_EMAIL: user_email, USER_ID: user_id},
     )
-    return redirect(url_for("main.index"))
+
+    # Redirect and clear session cookie
+    response = redirect(url_for("main.index"))
+    response.set_cookie("session_id", "", expires=0)  # Clear cookie
+
+    return response
 
 
 @auth_bp.route(f"/{API}/{PROFILE}")
