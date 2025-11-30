@@ -5,7 +5,7 @@ Used by Flask-Login's @login_required decorator.
 """
 
 import functions_framework
-from datetime import datetime, timezone
+from datetime import datetime
 from shared import datastore_client
 
 
@@ -40,11 +40,11 @@ def get_user_session(request):
                 "message": "Missing required field: user_id"
             }, 400
         
-        # Query for active sessions (use timezone-aware datetime)
+        # Query for active sessions
         db = datastore_client.get_datastore_client()
         query = db.query(kind="Session")
         query.add_filter("user_id", "=", user_id)
-        query.add_filter("expires_at", ">", datetime.now(timezone.utc))
+        query.add_filter("expires_at", ">", datetime.now())
         
         sessions = list(query.fetch(limit=1))
         

@@ -9,7 +9,7 @@ This function validates sessions and checks for hijacking attempts:
 
 import hashlib
 import functions_framework
-from datetime import datetime, timezone
+from datetime import datetime
 from shared import datastore_client
 
 
@@ -66,12 +66,12 @@ def validate_session(request):
                 "valid": False
             }, 404
         
-        # Check expiration (use timezone-aware datetime)
+        # Check expiration
         expires_at = session.get("expires_at")
         if isinstance(expires_at, str):
             expires_at = datetime.fromisoformat(expires_at)
         
-        if expires_at < datetime.now(timezone.utc):
+        if expires_at < datetime.now():
             # Session expired - delete it
             db.delete(key)
             print(f"Session expired and deleted: {session_id[:8]}...")
@@ -117,8 +117,8 @@ def validate_session(request):
                     "reason": "user_agent_mismatch"
                 }, 401
         
-        # Update last_active timestamp (use timezone-aware datetime)
-        session["last_active"] = datetime.now(timezone.utc)
+        # Update last_active timestamp
+        session["last_active"] = datetime.now()
         db.put(session)
         
         # Return validated session data

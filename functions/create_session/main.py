@@ -10,7 +10,8 @@ This function creates a secure session with:
 import hashlib
 import secrets
 import functions_framework
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
+from google.cloud import datastore
 from shared import datastore_client
 
 
@@ -74,8 +75,8 @@ def create_session(request):
         if user_agent:
             ua_hash = hashlib.sha256(user_agent.encode()).hexdigest()[:16]
         
-        # Minimal session data (use timezone-aware datetime)
-        now = datetime.now(timezone.utc)
+        # Minimal session data
+        now = datetime.now()
         session_data = {
             "user_id": user_id,
             "email": email,
@@ -91,7 +92,7 @@ def create_session(request):
         # Store in Datastore
         db = datastore_client.get_datastore_client()
         key = db.key("Session", session_id)
-        entity = db.Entity(key=key)
+        entity = datastore.Entity(key=key)
         entity.update(session_data)
         db.put(entity)
         
