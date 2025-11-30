@@ -4,7 +4,7 @@ This function is triggered by Pub/Sub and it removes sessions older than 7 days 
 """
 
 import functions_framework
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from shared import datastore_client
 from constants import DELETED_COUNT, CUTOFF_DATE
 from shared.constants import DATASTORE_KIND_SESSION, ERROR, ERROR_TYPE, LAST_ACTIVE, MESSAGE, STATUS, SUCCESS
@@ -21,8 +21,8 @@ def cleanup_old_sessions(cloud_event):
     try:
         db = datastore_client.get_datastore_client()
 
-        # Calculate cutoff date
-        cutoff_date = datetime.now() - timedelta(days=7)
+        # Calculate cutoff date 
+        cutoff_date = datetime.now(timezone.utc) - timedelta(days=7)
 
         # Query for old sessions
         query = db.query(kind=DATASTORE_KIND_SESSION)
