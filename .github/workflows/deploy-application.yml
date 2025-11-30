@@ -70,7 +70,7 @@ jobs:
 
       - name: Deployment Summary
         run: |
-          echo "✅ Successfully deployed application to ${{ inputs.environment }} environment"
+          echo "Successfully deployed application to ${{ inputs.environment }} environment"
           echo "Project: ${{ secrets.project_id }}"
           echo "App YAML: ${{ inputs.app_yaml }}"
 

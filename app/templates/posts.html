@@ -8,20 +8,20 @@
     
     {% if success_message %}
     <div style="background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 12px; border-radius: 4px; margin-bottom: 20px;">
-        ✓ {{ success_message }}
+        {{ success_message }}
     </div>
     {% endif %}
     
     {% if error_message %}
     <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 12px; border-radius: 4px; margin-bottom: 20px;">
-        ✗ {{ error_message }}
+        {{ error_message }}
     </div>
     {% endif %}
 
     {% if current_user.is_authenticated %}
     <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 2px solid #007bff;">
         <h2>Create a Post</h2>
-        <form method="POST" action="/posts/submit" style="display: flex; flex-direction: column; gap: 15px;">
+        <form method="POST" action="" style="display: flex; flex-direction: column; gap: 15px;">
             <div>
                 <label for="title" style="display: block; margin-bottom: 5px; font-weight: bold;">Title:</label>
                 <input 

@@ -54,7 +54,7 @@ jobs:
 
       - name: Deploy HTTP functions
         run: |
-          for func in get_datastore_stats get_mysql_stats; do
+          for func in get_posts get_sessions_overview create_session validate_session delete_session get_user_session; do
             cp -r functions/shared functions/$func/shared
             gcloud functions deploy $func \
               --gen2 \
@@ -83,7 +83,7 @@ jobs:
 
       - name: Grant App Engine permissions to invoke HTTP functions
         run: |
-          for service in get-datastore-stats get-mysql-stats; do
+          for service in get-posts get-sessions-overview create-session validate-session delete-session get-user-session; do
             gcloud run services add-iam-policy-binding $service \
               --region=europe-west1 \
               --member="serviceAccount:${{ secrets.project_id }}@appspot.gserviceaccount.com" \
@@ -96,7 +96,11 @@ jobs:
           echo "Successfully deployed Cloud Functions to ${{ inputs.environment }} environment"
           echo "Project: ${{ secrets.project_id }}"
           echo "Functions deployed:"
-          echo "  - get_datastore_stats"
-          echo "  - cleanup_old_sessions"
-          echo "  - get_mysql_stats"
+          echo "  - get_posts (HTTP)"
+          echo "  - get_sessions_overview (HTTP)"
+          echo "  - create_session (HTTP)"
+          echo "  - validate_session (HTTP)"
+          echo "  - delete_session (HTTP)"
+          echo "  - get_user_session (HTTP)"
+          echo "  - cleanup_old_sessions (Pub/Sub)"
 

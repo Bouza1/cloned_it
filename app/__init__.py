@@ -167,9 +167,8 @@ def _init_oauth(app: Flask) -> None:
 def _register_blueprints(app: Flask) -> None:
     """Register all application blueprints."""
     from .auth.routes import auth_bp
-    from .mysql_routes import mysql_bp
     from .routes import main_bp
 
-    blueprints = [main_bp, auth_bp, mysql_bp]
+    blueprints = [main_bp, auth_bp]
     for blueprint in blueprints:
         app.register_blueprint(blueprint)
