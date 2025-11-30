@@ -115,9 +115,6 @@ def get_db_connection():
         conn.close()
 
 
-# ============================================================================
-# Generic Database Operations
-# ============================================================================
 
 def execute_query(query: str, params: Dict[str, Any] = None) -> List[Dict[str, Any]]:
     """

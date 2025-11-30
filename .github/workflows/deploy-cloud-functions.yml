@@ -32,17 +32,13 @@ jobs:
 
       - name: Enable required GCP APIs
         run: |
-          gcloud services enable cloudfunctions.googleapis.com \
-            --project "${{ secrets.project_id }}"
-          gcloud services enable run.googleapis.com \
-            --project "${{ secrets.project_id }}"
-          gcloud services enable cloudbuild.googleapis.com \
-            --project "${{ secrets.project_id }}"
-          gcloud services enable artifactregistry.googleapis.com \
-            --project "${{ secrets.project_id }}"
-          gcloud services enable eventarc.googleapis.com \
-            --project "${{ secrets.project_id }}"
-          gcloud services enable pubsub.googleapis.com \
+          gcloud services enable \
+            cloudfunctions.googleapis.com \
+            run.googleapis.com \
+            cloudbuild.googleapis.com \
+            artifactregistry.googleapis.com \
+            eventarc.googleapis.com \
+            pubsub.googleapis.com \
             --project "${{ secrets.project_id }}"
 
       - name: Create Pub/Sub topics
@@ -56,26 +52,22 @@ jobs:
             echo "Topic cleanup-sessions-topic already exists"
           fi
 
-      - name: Deploy get_datastore_stats
+      - name: Deploy HTTP functions
         run: |
-          gcloud functions deploy get_datastore_stats \
-            --gen2 \
-            --runtime python311 \
-            --trigger-http \
-            --region europe-west1 \
-            --project "${{ secrets.project_id }}" \
-            --entry-point get_datastore_stats \
-            --source functions/get_datastore_stats \
-            --no-allow-unauthenticated \
-            --quiet
-      
-      - name: Grant App Engine permission to invoke get_datastore_stats
-        run: |
-          gcloud run services add-iam-policy-binding get-datastore-stats \
-            --region=europe-west1 \
-            --member="serviceAccount:${{ secrets.project_id }}@appspot.gserviceaccount.com" \
-            --role="roles/run.invoker" \
-            --project="${{ secrets.project_id }}"
+          for func in get_datastore_stats get_mysql_stats; do
+            cp -r functions/shared functions/$func/shared
+            gcloud functions deploy $func \
+              --gen2 \
+              --runtime python311 \
+              --trigger-http \
+              --region europe-west1 \
+              --project "${{ secrets.project_id }}" \
+              --entry-point $func \
+              --source functions/$func \
+              --set-env-vars CLOUD_SQL_CONNECTION_NAME="${{ secrets.project_id }}:europe-west1:cloned-it-dev",DB_USER=root,DB_NAME=cloned_it,GCP_PROJECT="${{ secrets.project_id }}" \
+              --no-allow-unauthenticated \
+              --quiet
+          done
 
       - name: Deploy cleanup_old_sessions
         run: |
@@ -89,28 +81,15 @@ jobs:
             --source functions/cleanup_old_sessions \
             --quiet
 
-      - name: Deploy get_mysql_stats
+      - name: Grant App Engine permissions to invoke HTTP functions
         run: |
-          cp -r functions/shared functions/get_mysql_stats/shared
-          gcloud functions deploy get_mysql_stats \
-            --gen2 \
-            --runtime python311 \
-            --trigger-http \
-            --region europe-west1 \
-            --project "${{ secrets.project_id }}" \
-            --entry-point get_mysql_stats \
-            --source functions/get_mysql_stats \
-            --no-allow-unauthenticated \
-            --set-env-vars CLOUD_SQL_CONNECTION_NAME="${{ secrets.project_id }}:europe-west1:cloned-it-dev",DB_USER=root,DB_NAME=cloned_it,GCP_PROJECT="${{ secrets.project_id }}" \
-            --quiet
-      
-      - name: Grant App Engine permission to invoke get_mysql_stats
-        run: |
-          gcloud run services add-iam-policy-binding get-mysql-stats \
-            --region=europe-west1 \
-            --member="serviceAccount:${{ secrets.project_id }}@appspot.gserviceaccount.com" \
-            --role="roles/run.invoker" \
-            --project="${{ secrets.project_id }}"
+          for service in get-datastore-stats get-mysql-stats; do
+            gcloud run services add-iam-policy-binding $service \
+              --region=europe-west1 \
+              --member="serviceAccount:${{ secrets.project_id }}@appspot.gserviceaccount.com" \
+              --role="roles/run.invoker" \
+              --project="${{ secrets.project_id }}"
+          done
 
       - name: Deployment Summary
         run: |

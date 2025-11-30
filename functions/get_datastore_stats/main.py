@@ -2,7 +2,7 @@
 """
 
 import functions_framework
-from google.cloud import datastore
+from shared import datastore_client
 
 
 @functions_framework.http
@@ -17,33 +17,16 @@ def get_datastore_stats(request):
         JSON response with Datastore statistics
     """
     try:
-        # Initialize Datastore client
-        db = datastore.Client()
+        client = datastore_client.get_datastore_client()
 
-        # Get all kinds
-        query = db.query(kind="__kind__")
-        query.keys_only()
+        user_kinds = datastore_client.get_all_kinds(include_system_kinds=False)
 
-        all_kinds = [entity.key.id_or_name for entity in query.fetch()]
+        kind_counts = datastore_client.get_kind_stats()
+        total_entities = sum(kind_counts.values())
 
-        # Filter out system kinds (those starting with __)
-        user_kinds = [k for k in all_kinds if not k.startswith("__")]
-
-        # Count entities in each kind
-        kind_counts = {}
-        total_entities = 0
-
-        for kind_name in user_kinds:
-            query = db.query(kind=kind_name)
-            query.keys_only() 
-            count = len(list(query.fetch()))
-            kind_counts[kind_name] = count
-            total_entities += count
-
-        # Build response
         response = {
             "status": "success",
-            "project": db.project,
+            "project": client.project,
             "database": "default",
             "total_entities": total_entities,
             "kinds": user_kinds,
