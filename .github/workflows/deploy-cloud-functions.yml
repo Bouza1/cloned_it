@@ -71,6 +71,7 @@ jobs:
 
       - name: Deploy cleanup_old_sessions
         run: |
+          cp -r functions/shared functions/cleanup_old_sessions/shared
           gcloud functions deploy cleanup_old_sessions \
             --gen2 \
             --runtime python311 \
@@ -79,6 +80,7 @@ jobs:
             --project "${{ secrets.project_id }}" \
             --entry-point cleanup_old_sessions \
             --source functions/cleanup_old_sessions \
+            --set-env-vars GCP_PROJECT="${{ secrets.project_id }}" \
             --quiet
 
       - name: Grant App Engine permissions to invoke HTTP functions

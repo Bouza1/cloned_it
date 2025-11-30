@@ -3,11 +3,11 @@
 This function is triggered by Pub/Sub and it removes sessions older than 7 days to keep the datastore clean.
 """
 
-from constants import DELETED_COUNT, CUTOFF_DATE
-from shared.constants import DATASTORE_KIND_SESSION, ERROR, ERROR_TYPE, LAST_ACTIVE, MESSAGE, STATUS, SUCCESS
 import functions_framework
 from datetime import datetime, timedelta
 from shared import datastore_client
+from constants import DELETED_COUNT, CUTOFF_DATE
+from shared.constants import DATASTORE_KIND_SESSION, ERROR, ERROR_TYPE, LAST_ACTIVE, MESSAGE, STATUS, SUCCESS
 
 
 @functions_framework.cloud_event
